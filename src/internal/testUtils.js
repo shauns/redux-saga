@@ -1,6 +1,9 @@
+// @flow
 import { TASK } from './utils'
 
-export function createMockTask() {
+type Task = any;
+
+export function createMockTask(): Task {
 
   let running = true
   let result, error

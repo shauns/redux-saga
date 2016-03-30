@@ -1,6 +1,8 @@
+// @flow
 import { sym, is, check, noop, warnDeprecated } from './utils'
 import proc from './proc'
 import emitter from './emitter'
+import type {Task} from './types';
 
 export const NOT_ITERATOR_ERROR = "runSaga must be called on an iterator"
 
@@ -13,7 +15,7 @@ export const NOT_ITERATOR_ERROR = "runSaga must be called on an iterator"
   multiple times unnecessarly. We need only one channel per store
 **/
 const IO = sym('IO')
-export function storeIO(store) {
+export function storeIO(store: any): any {
 
   warnDeprecated(`storeIO is deprecated, to run Saga dynamically, use 'run' method of the middleware`)
 
@@ -38,14 +40,18 @@ export function storeIO(store) {
 }
 
 export function runSaga(
-  iterator,
+  iterator: Iterator,
   {
     subscribe,
     dispatch,
     getState
+  }: {
+    subscribe: (cb: function) => function,
+    dispatch: (output: any) => any,
+    getState: () => any,
   },
-  monitor = noop
-) {
+  monitor: function = noop
+): Task {
 
   check(iterator, is.iterator, NOT_ITERATOR_ERROR)
 

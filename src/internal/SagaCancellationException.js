@@ -1,4 +1,4 @@
-
+// @flow
 /**
 * Creates an instance of a cancellation error
 * used internally by the Library to handle Cancellations effects
@@ -8,7 +8,11 @@
 *    origin: Origin saga from which the cancellation originated
 */
 
-export default function SagaCancellationException(type, saga, origin) {
+export default function SagaCancellationException(
+  type: 'PARALLEL_AUTO_CANCEL' | 'RACE_AUTO_CANCEL' | 'MANUAL_CANCEL',
+  saga: any,
+  origin: any
+) {
   const message = `SagaCancellationException; type: ${type}, saga: ${saga}, origin: ${origin}`
 
   this.name = 'SagaCancellationException'

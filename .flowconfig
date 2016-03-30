@@ -1,0 +1,21 @@
+[ignore]
+# Ignore react and fbjs where there are overlaps, but don't ignore
+# anything that react-native relies on
+.*/node_modules/fbjs/lib/.*
+.*/node_modules/npm/.*
+.*/node_modules/npm/.*
+
+[include]
+src/.*
+
+[libs]
+flow/
+
+[options]
+esproposal.class_static_fields=enable
+esproposal.class_instance_fields=enable
+
+munge_underscores=true
+
+[version]
+>= 0.22.1

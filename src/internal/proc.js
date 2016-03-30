@@ -1,11 +1,14 @@
+// @flow
 import { sym, noop, is, isDev, check, remove, deferred, autoInc, asap, TASK } from './utils'
 import { asEffect, matcher } from './io'
 import * as monitorActions from './monitorActions'
 import SagaCancellationException from './SagaCancellationException'
 
+import type {Task} from './types';
+
 
 export const NOT_ITERATOR_ERROR = 'proc first argument (Saga function result) must be an iterator'
-export const undefindInputError = name => `
+export const undefindInputError: (name: string) => string = name => `
   ${name} saga was provided with an undefined input action
   Hints :
   - check that your Action Creator returns a non undefined value
@@ -19,16 +22,22 @@ export const MANUAL_CANCEL = 'MANUAL_CANCEL'
 
 const nextEffectId = autoInc()
 
+
+
+interface SagaIterator extends Iterator {
+  _isRunning?: boolean;
+}
+
 export default function proc(
-  iterator,
-  subscribe = () => noop,
-  dispatch = noop,
-  getState = noop,
-  monitor = noop,
-  parentEffectId = 0,
-  name = 'anonymous',
-  forked
-) {
+  iterator: SagaIterator,
+  subscribe?: (cb: (item: any) => any) => function = () => noop,
+  dispatch?: function = noop,
+  getState?: function = noop,
+  monitor?: function = noop,
+  parentEffectId?: number = 0,
+  name?: string = 'anonymous',
+  forked?: boolean
+): Task {
 
   check(iterator, is.iterator, NOT_ITERATOR_ERROR)
 

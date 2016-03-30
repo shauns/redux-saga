@@ -1,10 +1,11 @@
+// @flow
 import middleware from './internal/middleware'
 export default middleware
 
 
 import _SagaCancellationException from './internal/SagaCancellationException'
 export const SagaCancellationException = _SagaCancellationException
-export const isCancelError = error => error instanceof SagaCancellationException
+export const isCancelError: (error: any) => boolean = error => error instanceof SagaCancellationException
 
 export { runSaga, storeIO } from './internal/runSaga'
 

@@ -1,3 +1,4 @@
+// @flow
 import { sym, is, kTrue, ident, check, TASK } from './utils'
 
 
@@ -20,7 +21,13 @@ const JOIN    = 'JOIN'
 const CANCEL  = 'CANCEL'
 const SELECT  = 'SELECT'
 
-const effect = (type, payload) => ({ [IO]: true, [type]: payload })
+type Effect<T> = {
+  [x: string]: T
+};
+
+type EffectFactory<T> = (type: string, payload: T) => Effect<T>
+
+const effect: EffectFactory = (type, payload) => ({ [IO]: true, [type]: payload })
 
 const matchers = {
   wildcard  : () => kTrue,
@@ -29,7 +36,11 @@ const matchers = {
   predicate : predicate => input => predicate(input)
 }
 
-export function matcher(pattern) {
+type MatchPattern = any;
+
+type Action = any;
+
+export function matcher(pattern: MatchPattern): (v: Action) => boolean {
   return (
       pattern === '*'   ? matchers.wildcard
     : is.array(pattern) ? matchers.array
@@ -38,7 +49,7 @@ export function matcher(pattern) {
   )(pattern)
 }
 
-export function take(pattern){
+export function take<MatchPattern>(pattern: MatchPattern): Effect<MatchPattern> {
   if (arguments.length > 0 && is.undef(pattern)) {
     throw new Error(INVALID_PATTERN)
   }
@@ -46,18 +57,25 @@ export function take(pattern){
   return effect(TAKE, is.undef(pattern) ? '*' : pattern)
 }
 
-export function put(action) {
+export function put<T>(action: T): Effect<T> {
   return effect(PUT, action)
 }
 
-export function race(effects) {
+export function race<T>(effects: T): Effect<T> {
   return effect(RACE, effects)
 }
 
-function getFnCallDesc(fn, args) {
+type FnCallDesc = {
+  context: ?any,
+  fn: function,
+  args: any[],
+};
+
+function getFnCallDesc(fn: any, args: any[]): FnCallDesc {
   check(fn, is.notUndef, CALL_FUNCTION_ARG_ERROR)
 
   let context = null
+
   if(is.array(fn)) {
     [context, fn] = fn
   } else if(fn.fn) {
@@ -68,39 +86,41 @@ function getFnCallDesc(fn, args) {
   return {context, fn, args}
 }
 
-export function call(fn, ...args) {
+export function call(fn: () => any, ...args: any[]): Effect {
   return effect(CALL, getFnCallDesc(fn, args))
 }
 
-export function apply(context, fn, args = []) {
+export function apply(context: any, fn: () => any, args: any[] = []): Effect {
   return effect(CALL, getFnCallDesc({context, fn}, args))
 }
 
-export function cps(fn, ...args) {
+export function cps(fn: () => any, ...args: any[]): Effect {
   return effect(CPS, getFnCallDesc(fn, args))
 }
 
-export function fork(fn, ...args) {
+export function fork(fn: () => any, ...args: any[]): Effect {
   return effect(FORK, getFnCallDesc(fn, args))
 }
 
 const isForkedTask = task => task[TASK]
 
-export function join(taskDesc) {
+type TaskDesc = Object
+
+export function join(taskDesc: TaskDesc): Effect<TaskDesc> {
   if(!isForkedTask(taskDesc))
     throw new Error(JOIN_ARG_ERROR)
 
   return effect(JOIN, taskDesc)
 }
 
-export function cancel(taskDesc) {
+export function cancel(taskDesc: TaskDesc): Effect<TaskDesc> {
   if(!isForkedTask(taskDesc))
     throw new Error(CANCEL_ARG_ERROR)
 
   return effect(CANCEL, taskDesc)
 }
 
-export function select(selector, ...args) {
+export function select(selector?: any, ...args: any[]): Effect {
   if(arguments.length === 0) {
     selector = ident
   } else {
@@ -111,13 +131,13 @@ export function select(selector, ...args) {
 
 
 export const asEffect = {
-  take    : effect => effect && effect[IO] && effect[TAKE],
-  put     : effect => effect && effect[IO] && effect[PUT],
-  race    : effect => effect && effect[IO] && effect[RACE],
-  call    : effect => effect && effect[IO] && effect[CALL],
-  cps     : effect => effect && effect[IO] && effect[CPS],
-  fork    : effect => effect && effect[IO] && effect[FORK],
-  join    : effect => effect && effect[IO] && effect[JOIN],
-  cancel  : effect => effect && effect[IO] && effect[CANCEL],
-  select  : effect => effect && effect[IO] && effect[SELECT]
+  take    : (effect => effect && effect[IO] && effect[TAKE]: (effect: Effect) => ?Effect),
+  put     : (effect => effect && effect[IO] && effect[PUT]: (effect: Effect) => ?Effect),
+  race    : (effect => effect && effect[IO] && effect[RACE]: (effect: Effect) => ?Effect),
+  call    : (effect => effect && effect[IO] && effect[CALL]: (effect: Effect) => ?Effect),
+  cps     : (effect => effect && effect[IO] && effect[CPS]: (effect: Effect) => ?Effect),
+  fork    : (effect => effect && effect[IO] && effect[FORK]: (effect: Effect) => ?Effect),
+  join    : (effect => effect && effect[IO] && effect[JOIN]: (effect: Effect) => ?Effect),
+  cancel  : (effect => effect && effect[IO] && effect[CANCEL]: (effect: Effect) => ?Effect),
+  select  : (effect => effect && effect[IO] && effect[SELECT]: (effect: Effect) => ?Effect)
 }

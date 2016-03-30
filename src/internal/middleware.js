@@ -1,10 +1,11 @@
+// @flow
 import { is, asap, isDev, check, warnDeprecated } from './utils'
 import proc from './proc'
 import emitter from './emitter'
 import { MONITOR_ACTION } from './monitorActions'
 import SagaCancellationException from './SagaCancellationException'
 
-export const sagaArgError = (fn, pos, saga) => (`
+export const sagaArgError: (fn: any, pos: number, saga: any) => string = (fn, pos, saga) => (`
   ${fn} can only be called on Generator functions
   Argument ${saga} at position ${pos} is not function!
 `)
@@ -17,7 +18,7 @@ export const GET_STATE_DEPRECATED_WARNING = `
   For more infos see http://yelouafi.github.io/redux-saga/docs/api/index.html#selectselector-args
 `
 
-export default function sagaMiddlewareFactory(...sagas) {
+export default function sagaMiddlewareFactory(...sagas: function[]): function {
   let runSagaDynamically
 
   sagas.forEach((saga, idx) => check(saga, is.func, sagaArgError('createSagaMiddleware', idx, saga)))

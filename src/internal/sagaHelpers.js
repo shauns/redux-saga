@@ -1,3 +1,4 @@
+// @flow
 import { is } from './utils'
 import { take, fork, cancel } from './io'
 import SagaCancellationException from './SagaCancellationException'
@@ -5,7 +6,13 @@ import SagaCancellationException from './SagaCancellationException'
 const resume = (fnOrValue, arg) => is.func(fnOrValue) ? fnOrValue(arg) : fnOrValue
 const done = { done: true }
 
-function fsmIterator(fsm, nextState, name = 'iterator') {
+type FsmIterator = {
+  name: string,
+  next: (arg: any, error: any) => any,
+  throw: (error: any) => any,
+};
+
+function fsmIterator(fsm: Object, nextState: string, name: string = 'iterator'): FsmIterator {
   let aborted, updateState
 
   function next(arg, error) {
@@ -36,10 +43,11 @@ function fsmIterator(fsm, nextState, name = 'iterator') {
   if(typeof Symbol !== 'undefined') {
     iterator[Symbol.iterator] = () => iterator
   }
-  return iterator
+
+  return iterator;
 }
 
-export function takeEvery(pattern, worker, ...args) {
+export function takeEvery(pattern: any, worker: function, ...args: any[]): FsmIterator {
   const yieldTake = { done: false, value: take(pattern)}
   const yieldFork = action => ({ done: false, value: fork(worker, ...args, action)})
 
@@ -49,7 +57,7 @@ export function takeEvery(pattern, worker, ...args) {
   }, 'take', `takeEvery(${pattern}, ${worker.name})`)
 }
 
-export function takeLatest(pattern, worker, ...args) {
+export function takeLatest(pattern: any, worker: function, ...args: any[]): FsmIterator {
   const yieldTake   = { done: false, value: take(pattern)}
   const yieldFork   = () => ({ done: false, value: fork(worker, ...args, currentAction)})
   const yieldCancel = () => ({ done: false, value: cancel(currentTask)})
